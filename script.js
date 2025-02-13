@@ -331,7 +331,6 @@ useful that I have this skill as a designer.`,
     }
 ];
 
-// Create the modal elements
 const modalOverlay = document.createElement('div');
 modalOverlay.className = 'modal-overlay';
 modalOverlay.innerHTML = `
@@ -345,30 +344,82 @@ document.body.appendChild(modalOverlay);
 const modal = {
     overlay: modalOverlay,
     image: modalOverlay.querySelector('.modal-image'),
-    closeBtn: modalOverlay.querySelector('.modal-close')
+    closeBtn: modalOverlay.querySelector('.modal-close'),
+    isOpen: false
 };
 
-// Close modal function
+// Improved close modal function
 const closeModal = () => {
     modal.overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
+    modal.isOpen = false;
 };
 
-// Event listeners for modal
-modal.closeBtn.addEventListener('click', closeModal);
+// Open modal function with mobile improvements
+const openModal = (imageSrc) => {
+    modal.image.src = imageSrc;
+    modal.overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    modal.isOpen = true;
+};
+
+// Mobile-friendly event listeners
+modal.closeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal();
+});
+
 modal.overlay.addEventListener('click', (e) => {
     if (e.target === modal.overlay) {
         closeModal();
     }
 });
 
+// Prevent unwanted mobile behaviors
+modal.image.addEventListener('click', (e) => {
+    e.stopPropagation();
+});
+
+// Mobile touch events
+let touchStartY = 0;
+let touchEndY = 0;
+
+modalOverlay.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+modalOverlay.addEventListener('touchmove', (e) => {
+    if (modal.isOpen) {
+        touchEndY = e.touches[0].clientY;
+        const diff = touchStartY - touchEndY;
+        
+        // If user has scrolled more than 100px, close the modal
+        if (Math.abs(diff) > 100) {
+            closeModal();
+        }
+    }
+}, { passive: true });
+
+// Prevent double-tap zoom on mobile
+let lastTap = 0;
+document.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if (tapLength < 500 && tapLength > 0) {
+        e.preventDefault();
+    }
+    lastTap = currentTime;
+});
+
 // Escape key to close modal
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.overlay.classList.contains('active')) {
+    if (e.key === 'Escape' && modal.isOpen) {
         closeModal();
     }
 });
 
+// Project grid implementation
 const projectsGrid = document.getElementById('projectsGrid');
 let currentlyExpanded = null;
 
@@ -381,20 +432,17 @@ projects.forEach(project => {
         <div class="project-content">
             <p class="project-description">${project.description}</p>
             <div class="project-gallery">
-                ${project.images.map(img => `<img src="${img}" alt="Project image">`).join('')}
+                ${project.images.map(img => `<img src="${img}" alt="Project image" loading="lazy">`).join('')}
             </div>
         </div>
     `;
 
+    // Improved click handling for both desktop and mobile
     projectCard.addEventListener('click', (e) => {
         if (e.target.tagName === 'IMG') {
-            // If clicking an image, show it in modal
-            e.stopPropagation(); // Prevent card expansion when clicking image
-            modal.image.src = e.target.src;
-            modal.overlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+            e.stopPropagation();
+            openModal(e.target.src);
         } else {
-            // Regular card expansion
             if (currentlyExpanded && currentlyExpanded !== projectCard) {
                 currentlyExpanded.classList.remove('expanded');
             }
@@ -406,11 +454,12 @@ projects.forEach(project => {
     projectsGrid.appendChild(projectCard);
 });
 
+// Quote animation (keep as is)
 document.addEventListener('DOMContentLoaded', function() {
     const quoteContainer = document.querySelector('.quote-container');
     
     function checkQuote() {
-        if (!quoteContainer) return; // Safety check
+        if (!quoteContainer) return;
         
         const triggerBottom = window.innerHeight * 0.8;
         const quoteTop = quoteContainer.getBoundingClientRect().top;
@@ -422,10 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initial check
     checkQuote();
-
-    // Add scroll listener
     window.addEventListener('scroll', checkQuote);
     window.addEventListener('resize', checkQuote);
 });
