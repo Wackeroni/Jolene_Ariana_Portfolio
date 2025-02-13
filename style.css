@@ -124,7 +124,7 @@ header {
 }
 
 .project-card.expanded .project-content {
-    max-height: 1000px;
+    max-height: none; /* Remove the fixed height limit */
     opacity: 1;
     margin-top: 20px;
 }
@@ -297,18 +297,34 @@ header {
     .project-gallery {
         grid-template-columns: 1fr;
         gap: 15px;
+        overflow-y: visible; /* Ensure gallery can scroll */
+        max-height: none; /* Remove any height restrictions */
     }
 
+    .project-content {
+        overflow: visible; /* Allow content to flow naturally */
+    }
     .project-gallery img {
         height: auto;
         max-height: 300px;
+        width: 100%;
         object-fit: contain;
         background-color: #f5f5f5;
     }
 
     .project-card.expanded {
         padding: 20px;
+        min-height: auto; /* Remove minimum height constraint */
+        height: auto; /* Allow natural height */
+        overflow: visible; /* Ensure content is visible */
     }
+
+    .project-card.expanded .project-content {
+        height: auto;
+        overflow: visible;
+    }
+
+
 
     .project-description {
         font-size: 0.95rem;
